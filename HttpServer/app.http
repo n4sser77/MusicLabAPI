@@ -1,0 +1,18 @@
+# For more info on HTTP files go to https://aka.ms/vs/httpfile
+
+POST http://localhost:5106/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "nasserqahtan@gmail.com",
+  "password": "naser123"
+}
+
+###
+
+GET http://localhost:5106/api/auth/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiIiwianRpIjoiM2E3NjUxMmItMTI0Yi00YTljLThkMGQtMWZmOTA2MGJhM2E0IiwiZXhwIjoxNzM5MTUxOTA1LCJpc3MiOiJ5b3VyLWxvY2FsLW1hdWkiLCJhdWQiOiJsb2NhbC1tYXVpLWFwcC1mb3ItdXNlcnMifQ.u_lTaBhXOboIB33Dk5dU2Y3zzLwBPt_TWKIv-qRe5j4
+Content-Type: application/json
+
+
+  
