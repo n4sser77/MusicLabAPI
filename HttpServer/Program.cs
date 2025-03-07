@@ -13,11 +13,6 @@ namespace Backend
         {
             var builder = WebApplication.CreateBuilder(args);
 
-
-            
-
-
-
             // Optionally, add services to the container here
             // For example, if you plan to use controllers:
             builder.Services.AddCors();
@@ -41,9 +36,6 @@ namespace Backend
                        .AllowAnyHeader();
             });
 
-            
-
-
 
             // Configure the HTTP request pipeline.
             // If you added controllers, map them:
@@ -53,7 +45,6 @@ namespace Backend
 
             // Alternatively, for a simple endpoint, you can add:
             app.MapGet("/", () => "Hello from the empty ASP.NET Core HTTP Server!");
-
 
 
             app.Run();

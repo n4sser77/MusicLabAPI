@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
-namespace Backend;
+namespace HttpServer.asp.Dtos;
 
 
 public class FileUploadDto

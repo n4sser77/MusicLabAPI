@@ -71,7 +71,7 @@ public class JwtService : IJwtService
             issuer: "your-local-maui",
             audience: "local-maui-app-for-users",
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(1), // Token valid for 1 hour
+            expires: DateTime.UtcNow.AddMonths(1), // Token valid for 1 hour
             signingCredentials: credentials
         );
 

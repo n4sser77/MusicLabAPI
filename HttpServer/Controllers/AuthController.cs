@@ -59,10 +59,10 @@ public class AuthController : ControllerBase
 
         if (user == null)
         {
-            return Unauthorized(new { message = "Faild to create user" });
+            return Unauthorized(new { Message = "Faild to create user" });
         }
-
-        return Ok(new { token = _jwtService.GenerateJwtToken(user.Id.ToString(), "User"), message = "User created successfully" });
+        var token = await _jwtService.GenerateJwtToken(user.Id.ToString(), user.Role);
+        return Ok(new ResponseModel { Token = token, Message = "User created successfully" });
 
 
     }
@@ -114,4 +114,5 @@ class ResponseModel
 {
     public string Token { get; set; }
     public string Message { get; set; }
+
 }

@@ -13,6 +13,25 @@ Content-Type: application/json
 GET http://localhost:5106/api/auth/profile
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiIiwianRpIjoiM2E3NjUxMmItMTI0Yi00YTljLThkMGQtMWZmOTA2MGJhM2E0IiwiZXhwIjoxNzM5MTUxOTA1LCJpc3MiOiJ5b3VyLWxvY2FsLW1hdWkiLCJhdWQiOiJsb2NhbC1tYXVpLWFwcC1mb3ItdXNlcnMifQ.u_lTaBhXOboIB33Dk5dU2Y3zzLwBPt_TWKIv-qRe5j4
 Content-Type: application/json
+###
 
+POST http://localhost:5106/api/files/uploadfile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary12345
 
-  
+------WebKitFormBoundary12345
+Content-Disposition: form-data; name="file"; filename="test-audio.mp3"
+Content-Type: audio/mpeg
+
+< ./test-audio.mp3
+------WebKitFormBoundary12345
+Content-Disposition: form-data; name="musicMetadataDto"
+Content-Type: application/json
+
+{
+    "title": "My Awesome Beat",
+    "userId": 123,
+    "bpm": 120,
+    "genre": "Hip-Hop"
+}
+------WebKitFormBoundary12345--
