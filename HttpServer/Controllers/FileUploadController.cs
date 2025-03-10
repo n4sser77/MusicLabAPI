@@ -63,8 +63,8 @@ public class FileUploadController : ControllerBase
             Bpm = metadata.Bpm,
             Genre = metadata.Genre,
             UserId = metadata.UserId,
-            FileReference = fileReference,
-            
+            FilePath = filePath,
+
         };
 
         // Save the metadata to the database
