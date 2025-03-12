@@ -1,10 +1,12 @@
 ﻿using Backend;
+using Backend.asp.Services.Interfaces;
 using Backend.Migrations;
 using Backend.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Shared.Dtos;
+using System.Security.Claims;
 
 namespace HttpServer.asp.Controllers
 {
@@ -12,12 +14,14 @@ namespace HttpServer.asp.Controllers
     public class AudioStream : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IJwtService _jwtService;
         private readonly IWebHostEnvironment _env;
         private string uploadsFolder;
-        public AudioStream(AppDbContext context, IWebHostEnvironment env)
+        public AudioStream(AppDbContext context, IWebHostEnvironment env, IJwtService jwtService)
         {
             _context = context;
             _env = env;
+            _jwtService = jwtService;
             uploadsFolder = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads");
         }
 
@@ -39,7 +43,27 @@ namespace HttpServer.asp.Controllers
         [HttpGet("getall")]
         public async Task<IActionResult> GetAllAudio()
         {
-            var files = _context.MusicData.ToList();
+            var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            {
+                return Unauthorized();
+            }
+            var token = authHeader.Substring("Bearer ".Length);
+            var claimDictionary = _jwtService.ValidateToken(token);
+
+            if (claimDictionary == null)
+            {
+                return Unauthorized();
+            }
+
+            var userId = claimDictionary[ClaimTypes.NameIdentifier];
+            if (!int.TryParse(userId, out int userIdInt))
+            {
+                return Unauthorized();
+            }
+
+
+            var files = _context.MusicData.Where(m => m.UserId == userIdInt).ToList();
             var filesMetadataDto = new List<MusicMetadataDto>();
             if (files == null || files.Count == 0) return BadRequest("No files found");
 
