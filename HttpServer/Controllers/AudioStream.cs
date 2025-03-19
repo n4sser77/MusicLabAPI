@@ -43,7 +43,8 @@ namespace HttpServer.asp.Controllers
         [HttpGet("getall")]
         public async Task<IActionResult> GetAllAudio()
         {
-            var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+            // manually validate token
+            var authHeader = Request.Headers.Authorization.FirstOrDefault();
             if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
             {
                 return Unauthorized();
@@ -87,6 +88,29 @@ namespace HttpServer.asp.Controllers
 
 
             return Ok(filesMetadataDto);
+        }
+        public async Task<IActionResult> DeleteAudio(int id)
+        {
+            var file = await _context.MusicData.FirstOrDefaultAsync(m => m.Id == id);
+            if (file == null) return NotFound("File not found");
+            _context.MusicData.Remove(file);
+            System.IO.File.Delete(file.FilePath);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        public async Task<IActionResult> UpdateAudio(int id, MusicMetadataDto updatedMetadataDto)
+        {
+            var file = await _context.MusicData.FirstOrDefaultAsync(m => m.Id == id);
+            if (file == null) return NotFound("File not found");
+            file.Title = updatedMetadataDto.Title;
+            file.Bpm = updatedMetadataDto.Bpm;
+            file.Genre = updatedMetadataDto.Genre;
+            
+            
+            
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
     }

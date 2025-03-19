@@ -7,6 +7,7 @@ using HttpServer.asp.Dtos;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using Shared.Dtos;
+using HttpServer.asp.Services.Interfaces;
 
 namespace Backend.Controllers;
 
@@ -16,16 +17,19 @@ public class FileUploadController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IWebHostEnvironment _env;
+    private readonly IWaveformGeneratorService _waveform;
 
-    public FileUploadController(AppDbContext context, IWebHostEnvironment env)
+    public FileUploadController(AppDbContext context, IWebHostEnvironment env, IWaveformGeneratorService waveGen)
     {
         _context = context;
         _env = env;
+        _waveform = waveGen;
     }
 
     [HttpPost("uploadfile")]
     public async Task<IActionResult> UploadFile([FromForm] FileUploadDto uploadDto, [FromForm] string musicMetadataDto)
     {
+
         if (uploadDto.File == null || uploadDto.File.Length == 0)
         {
             return BadRequest("No file uploaded.");
@@ -50,6 +54,8 @@ public class FileUploadController : ControllerBase
             await uploadDto.File.CopyToAsync(stream);
         }
 
+        var generateWaveformtask = _waveform.GenerateWaveformImage(filePath);
+
         // Create a FileReference instance for the database
         var fileReference = new FileReference
         {
@@ -64,6 +70,7 @@ public class FileUploadController : ControllerBase
             Genre = metadata.Genre,
             UserId = metadata.UserId,
             FilePath = filePath,
+            WaveFormImageBase64 = await generateWaveformtask,
 
         };
 

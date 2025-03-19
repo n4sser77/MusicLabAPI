@@ -12,6 +12,7 @@ public class MusicMetadata
     public string Title { get; set; } = string.Empty;
     public int? Bpm { get; set; }
     public string? Genre { get; set; }
+    public string WaveFormImageBase64{ get; set; } 
     //public bool IsVisible { get; set; }
 
 
