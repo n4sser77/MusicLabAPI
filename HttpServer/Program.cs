@@ -2,7 +2,8 @@
 
 
 using Backend.asp.Services.Interfaces;
-
+using HttpServer.asp.Services;
+using HttpServer.asp.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Backend
@@ -19,6 +20,7 @@ namespace Backend
             builder.Services.AddScoped<IUserManager, UserManager>();
 
             builder.Services.AddSingleton<IJwtService, JwtService>();
+            builder.Services.AddTransient<IWaveformGeneratorService, WaveformGeneratorService>();
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                     options.UseSqlServer(@"Server=.\SQLEXPRESS;Database=FileUploadDEMO;

@@ -6,11 +6,21 @@ namespace HttpServer.asp.Services;
 
 public class WaveformGeneratorService : IWaveformGeneratorService
 {
+    private readonly IWebHostEnvironment _env;
+    private readonly string uploadsFolder;
+
     /// <summary>
     /// Generate waveform image from audio file
     /// </summary>
     /// <param name="filepath"></param>
     /// <returns>returns base64 string</returns>
+
+    public WaveformGeneratorService(IWebHostEnvironment env)
+    {
+        _env = env;
+        uploadsFolder = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads");
+    }
+
     public async Task<string> GenerateWaveformImage(string filepath)
     {
         string imageBase64 = string.Empty;
@@ -25,7 +35,7 @@ public class WaveformGeneratorService : IWaveformGeneratorService
 
         var maxPeakProvider = new MaxPeakProvider();
         var renderer = new WaveFormRenderer();
-        using var audioStream = new AudioFileReader(filepath);
+        using var audioStream = new AudioFileReader(Path.Combine(uploadsFolder,filepath));
         var image = renderer.Render(audioStream, maxPeakProvider, myRendererSettings);
         using (MemoryStream ms = new MemoryStream())
         {
