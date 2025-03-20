@@ -35,6 +35,7 @@ namespace HttpServer.asp.Controllers
             var filePath = Path.Combine(uploadsFolder, fileName);
             var file = await _context.MusicData.FirstOrDefaultAsync(m => m.FilePath == fileName);
             if (file == null) file = await _context.MusicData.FirstOrDefaultAsync(m => m.Title == Path.GetFileNameWithoutExtension(filePath));
+            if (file == null) file = await _context.MusicData.FirstOrDefaultAsync(m => m.FilePath == filePath);
             if (!System.IO.File.Exists(filePath))
             {
                 return NotFound("File not found.");
@@ -63,18 +64,21 @@ namespace HttpServer.asp.Controllers
             foreach (var file in files)
             {
                 var fRef = await _context.Files.FirstOrDefaultAsync(f => f.Id == file.FileReferenceId);
-                file.FilePath = Path.GetFileName(fRef.FilePath);
+                if(fRef != null) 
+                    file.FilePath = Path.GetFileName(fRef.FilePath);
+                
+                    
 
-                var fileDto = new MusicMetadataDto
-                {
-                    Title = file.Title,
-                    Bpm = file.Bpm,
-                    FilePath = file.FilePath,
-                    Id = file.Id,
-                    Genre = file.Genre,
-                    UserId = file.UserId,
-                    WaveFormImageBase64 = file.WaveFormImageBase64
-                };
+                    var fileDto = new MusicMetadataDto
+                    {
+                        Title = file.Title,
+                        Bpm = file.Bpm,
+                        FilePath = file.FilePath,
+                        Id = file.Id,
+                        Genre = file.Genre,
+                        UserId = file.UserId,
+                        WaveFormImageBase64 = file.WaveFormImageBase64
+                    };
 
                 if (string.IsNullOrEmpty(fileDto.WaveFormImageBase64))
                 {
