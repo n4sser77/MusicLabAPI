@@ -35,7 +35,8 @@ public class WaveformGeneratorService : IWaveformGeneratorService
 
         var maxPeakProvider = new MaxPeakProvider();
         var renderer = new WaveFormRenderer();
-        using var audioStream = new AudioFileReader(Path.Combine(uploadsFolder,filepath));
+        using var audioStream = new AudioFileReader(Path.Combine(uploadsFolder, filepath));
+
         var image = renderer.Render(audioStream, maxPeakProvider, myRendererSettings);
         using (MemoryStream ms = new MemoryStream())
         {

@@ -4,19 +4,19 @@ POST http://localhost:5106/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "nasserqahtan@gmail.com",
-  "password": "naser123"
+  "email": "nasserqahtan0@gmail.com",
+  "password": "nasser123"
 }
 
 ###
 
 GET http://localhost:5106/api/auth/profile
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiIiwianRpIjoiM2E3NjUxMmItMTI0Yi00YTljLThkMGQtMWZmOTA2MGJhM2E0IiwiZXhwIjoxNzM5MTUxOTA1LCJpc3MiOiJ5b3VyLWxvY2FsLW1hdWkiLCJhdWQiOiJsb2NhbC1tYXVpLWFwcC1mb3ItdXNlcnMifQ.u_lTaBhXOboIB33Dk5dU2Y3zzLwBPt_TWKIv-qRe5j4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiIiwianRpIjoiOWU4MzNlYzgtNjg4My00ZjQ0LWJlNzktZTNiZGViNDIzZmIyIiwiZXhwIjoxNzU3NDU5MzE3LCJpc3MiOiJ5b3VyLWxvY2FsLW1hdWkiLCJhdWQiOiJsb2NhbC1tYXVpLWFwcC1mb3ItdXNlcnMifQ.uBcUVkY_irLJjuxwdjNcj3bzEruZWqy5LHx55Pjs3Vw
 Content-Type: application/json
 ###
 
 POST http://localhost:5106/api/files/uploadfile
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiIiwianRpIjoiOWU4MzNlYzgtNjg4My00ZjQ0LWJlNzktZTNiZGViNDIzZmIyIiwiZXhwIjoxNzU3NDU5MzE3LCJpc3MiOiJ5b3VyLWxvY2FsLW1hdWkiLCJhdWQiOiJsb2NhbC1tYXVpLWFwcC1mb3ItdXNlcnMifQ.uBcUVkY_irLJjuxwdjNcj3bzEruZWqy5LHx55Pjs3Vw
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary12345
 
 ------WebKitFormBoundary12345
@@ -30,8 +30,13 @@ Content-Type: application/json
 
 {
     "title": "My Awesome Beat",
-    "userId": 123,
+    "userId": -1,
     "bpm": 120,
     "genre": "Hip-Hop"
 }
 ------WebKitFormBoundary12345--
+
+###
+GET http://localhost:5106/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiIiwianRpIjoiOWU4MzNlYzgtNjg4My00ZjQ0LWJlNzktZTNiZGViNDIzZmIyIiwiZXhwIjoxNzU3NDU5MzE3LCJpc3MiOiJ5b3VyLWxvY2FsLW1hdWkiLCJhdWQiOiJsb2NhbC1tYXVpLWFwcC1mb3ItdXNlcnMifQ.uBcUVkY_irLJjuxwdjNcj3bzEruZWqy5LHx55Pjs3Vw
+Content-Type: text/html

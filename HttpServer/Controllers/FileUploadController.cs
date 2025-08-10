@@ -8,6 +8,11 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using Shared.Dtos;
 using HttpServer.asp.Services.Interfaces;
+using Minio;
+using Minio.DataModel.Args;
+using Minio.DataModel;
+using Minio.DataModel.Encryption;
+using NAudio.MediaFoundation;
 
 namespace Backend.Controllers;
 
@@ -18,52 +23,73 @@ public class FileUploadController : ControllerBase
     private readonly AppDbContext _context;
     private readonly IWebHostEnvironment _env;
     private readonly IWaveformGeneratorService _waveform;
+    private readonly IStorageProvider _storage;
+    // private readonly IMinioClient _minio;
 
-    public FileUploadController(AppDbContext context, IWebHostEnvironment env, IWaveformGeneratorService waveGen)
+    public FileUploadController(AppDbContext context, IWebHostEnvironment env, IWaveformGeneratorService waveGen, IStorageProvider storage)
     {
         _context = context;
         _env = env;
         _waveform = waveGen;
+        // _minio = minioclient;
+        _storage = storage;
     }
 
     [HttpPost("uploadfile")]
-    public async Task<IActionResult> UploadFile([FromForm] FileUploadDto uploadDto, [FromForm] string musicMetadataDto)
+    public async Task<IActionResult> UploadFile([FromForm] IFormFile file, [FromForm] MusicMetadataDto musicMetadataDto)
     {
 
-        if (uploadDto.File == null || uploadDto.File.Length == 0)
+        if (file == null || file.Length == 0)
         {
             return BadRequest("No file uploaded.");
         }
 
-        var metadata = JsonSerializer.Deserialize<MusicMetadataDto>(musicMetadataDto);
-
-        // Create a folder path to store the file
-        var uploadsFolder = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads");
-        if (!Directory.Exists(uploadsFolder))
+        // var metadata = JsonSerializer.Deserialize<MusicMetadataDto>(musicMetadataDto);
+        var metadata = musicMetadataDto;
+        if (metadata is null)
         {
-            Directory.CreateDirectory(uploadsFolder);
+            return BadRequest("Meta data is missing");
         }
 
-        // Generate a unique file name (or use the original file name)
-        var fileName = Path.GetFileName(uploadDto.File.FileName);
-        var filePath = Path.Combine(uploadsFolder, fileName);
 
-        // Save the file to the folder
-        using (var stream = new FileStream(filePath, FileMode.Create))
+
+        // // Create a folder path to store the file -- old way
+        // var uploadsFolder = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads");
+        // if (!Directory.Exists(uploadsFolder))
+        // {
+        //     Directory.CreateDirectory(uploadsFolder);
+        // }
+
+        // // Generate a unique file name (or use the original file name)
+        // var filePath = Path.Combine(uploadsFolder, fileName);
+
+
+
+        var safeFileName = Path.GetFileName(file.FileName);
+
+        if (file.ContentType != "audio")
         {
-            await uploadDto.File.CopyToAsync(stream);
+
         }
 
-        var generateWaveformtask = _waveform.GenerateWaveformImage(filePath);
+        // Get stream from form
+        Stream filestram = file.OpenReadStream();
+        // Upload to IStorageProvider
+        var filePath = await _storage.UploadAsync(filestram, safeFileName, file.ContentType, metadata.UserId);
+
+        System.Console.WriteLine("Filepath: " + filePath);
+        System.Console.WriteLine("Filepath: " + _storage.GetAbsolutePath(filePath));
+
+        var generateWaveformtask = _waveform.GenerateWaveformImage(_storage.GetAbsolutePath(filePath));
 
         // Create a FileReference instance for the database
         var fileReference = new FileReference
         {
-            Name = fileName,
-            FilePath = filePath // Or store a relative path if preferred
+            Name = safeFileName,
+            FilePath = filePath
         };
 
-        var MusicMetaData = new MusicMetadata()
+        var musicMetaData = new MusicMetadata()
         {
             Title = metadata.Title,
             Bpm = metadata.Bpm,
@@ -75,8 +101,17 @@ public class FileUploadController : ControllerBase
         };
 
         // Save the metadata to the database
-        _context.Add(MusicMetaData);
+        _context.Add(musicMetaData);
         await _context.SaveChangesAsync();
+
+
+        // Save the file to the folder -- old way
+        // using (var stream = new FileStream(filePath, FileMode.Create))
+        // {
+        //     await uploadDto.File.CopyToAsync(stream);
+
+        // }
+
 
         return Ok(new FileuploadResponseDto { message = "File uploaded successfully.", fileId = fileReference.Id });
     }

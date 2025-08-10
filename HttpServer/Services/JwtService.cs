@@ -68,8 +68,8 @@ public class JwtService : IJwtService
              };
 
         var token = new JwtSecurityToken(
-            issuer: "your-local-maui",
-            audience: "local-maui-app-for-users",
+            issuer: "MusicLabBackEndApi",
+            audience: "MusicLabAppUsers",
             claims: claims,
             expires: DateTime.UtcNow.AddMonths(1), // Token valid for 1 hour
             signingCredentials: credentials
