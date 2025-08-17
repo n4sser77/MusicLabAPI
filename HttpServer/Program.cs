@@ -11,15 +11,13 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 
-// API: http://172.20.10.3:9000  http://127.0.0.1:9000
-//    RootUser: minioadmin
-//    RootPass: minioadmin
-// var endpoint = "http://localhost:9000";
-// var accessKey = "minioadmin";
-// var secretKey = "minioadmin";
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+
+
 
 // Optionally, add services to the container here
 builder.Services.AddScoped<IUserManager, UserManager>();
@@ -61,6 +59,11 @@ builder.Services.AddCors();
 
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddTransient<IWaveformGeneratorService, WaveformGeneratorService>();
+// Read the secret key from configuration
+var signedUrlConfig = builder.Configuration.GetSection("SignedUrl");
+var secretKey = signedUrlConfig.GetValue<string>("SecretKey");
+
+builder.Services.AddSingleton(new SignedUrlService(secretKey));
 
 builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlServer(@"Server=.\SQLEXPRESS;Database=FileUploadDEMO;

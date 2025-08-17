@@ -17,7 +17,7 @@ namespace Shared.Dtos
         public string? Genre { get; set; }
         [JsonPropertyName("filepath")]
         public string? FilePath { get; set; }
-        [JsonPropertyName("waveformImageBase64")]
+        [JsonPropertyName("waveFormImageBase64")]
         public string? WaveFormImageBase64 { get; set; }
         /// <summary>
         /// implement later for when needing to hide from other users, 

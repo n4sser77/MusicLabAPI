@@ -1,6 +1,7 @@
 ﻿using Backend;
 using Backend.asp.Services.Interfaces;
 using Backend.Migrations;
+using HttpServer.asp.Services;
 using HttpServer.asp.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -17,7 +18,7 @@ using System.Security.Claims;
 
 namespace HttpServer.asp.Controllers
 {
-    [Route("api/audio")]
+    [Route("api/audios")]
     public class AudioStream : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -25,11 +26,12 @@ namespace HttpServer.asp.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly IWaveformGeneratorService _wave;
         private readonly IStorageProvider _storage;
+        private readonly SignedUrlService _signedUrlService;
         private string uploadsFolder;
         // private IMinioClient _minio;
         // private string bucketName = "music-files";
 
-        public AudioStream(AppDbContext context, IWebHostEnvironment env, IJwtService jwtService, IWaveformGeneratorService wave, IStorageProvider storage)
+        public AudioStream(AppDbContext context, IWebHostEnvironment env, IJwtService jwtService, IWaveformGeneratorService wave, IStorageProvider storage, SignedUrlService signedUrlService)
         {
             _context = context;
             _env = env;
@@ -37,13 +39,47 @@ namespace HttpServer.asp.Controllers
             _wave = wave;
             uploadsFolder = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads");
             _storage = storage;
+            _signedUrlService = signedUrlService;
 
         }
 
-        [HttpGet("stream/{userId}/{fileName}/")]
-
-        public async Task<IActionResult> StreamAudio(string fileName, int userId)
+        [HttpGet("signed-url/{fileName}")]
+        [Authorize]
+        public async Task<IActionResult> GetSignedUrl(string fileName)
         {
+            // Get the user ID from the authenticated token
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized();
+            }
+
+            // Check if the file exists and belongs to the user
+            var file = await _context.MusicData.FirstOrDefaultAsync(m => m.FilePath == "user_" + userId + "/" + fileName);
+            if (file == null)
+            {
+                return NotFound("File not found or not owned by user.");
+            }
+
+            // Use your storage provider to generate a pre-signed URL
+            // This method needs to be implemented in your IStorageProvider
+            var signedUrl = _storage.GetSignedUrlAsync(fileName, file.UserId, TimeSpan.FromMinutes(60), "http://localhost:5106/api/audios"); // URL is valid for 10 minutes
+
+            if (string.IsNullOrEmpty(signedUrl))
+            {
+                return BadRequest("Failed to generate signed URL.");
+            }
+
+            return Ok(signedUrl);
+        }
+
+
+        [HttpGet("{userId}/{fileName}/")]
+        public async Task<IActionResult> StreamAudio(int userId, string fileName, [FromQuery] long expires, [FromQuery] string sig)
+        {
+            if (!_signedUrlService.ValidateSignature(userId, fileName, expires, sig))
+                return Unauthorized();
+
             if (fileName == null) return NotFound("File not found");
             string filePath;
             if (!await _storage.ExistsAsync(fileName, userId))
@@ -77,14 +113,12 @@ namespace HttpServer.asp.Controllers
             return File(fileStream, "audio/mpeg", enableRangeProcessing: true);
         }
 
-        [HttpGet("getall")]
+        [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetAllAudio()
         {
 
-            // var result = TryGetUserIdFromToken(out int userIdInt);
-            // if (result != null) return result;
-            //var userId = User.FindFirstValue("sub");
+
             var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
             foreach (var claim in User.Claims)
@@ -98,7 +132,7 @@ namespace HttpServer.asp.Controllers
 
             var files = _context.MusicData.Where(m => m.UserId == userIdInt).ToList();
             var filesMetadataDto = new List<MusicMetadataDto>();
-            if (files == null || files.Count == 0) return BadRequest("No files found");
+            if (files == null || files.Count == 0) return Ok(filesMetadataDto);
 
             foreach (var file in files)
             {
@@ -135,37 +169,8 @@ namespace HttpServer.asp.Controllers
         }
 
 
-        // manually validate token
-        private IActionResult TryGetUserIdFromToken(out int userId)
-        {
-            userId = 0;
-            var authHeader = Request.Headers.Authorization.FirstOrDefault();
 
-            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
-            {
-                return Unauthorized();
-            }
-
-            var token = authHeader.Substring("Bearer ".Length);
-            var claimDictionary = _jwtService.ValidateToken(token);
-
-            if (claimDictionary == null || !claimDictionary.TryGetValue(ClaimTypes.NameIdentifier, out var userIdStr))
-            {
-                return Unauthorized();
-            }
-
-            if (!int.TryParse(userIdStr, out userId))
-            {
-                return Unauthorized();
-            }
-
-            return null; // Indicating success
-        }
-
-
-
-
-        [HttpDelete("delete/{id}")]
+        [HttpDelete("{id}")]
         [Authorize]
         public async Task<IActionResult> DeleteAudio(int id)
         {
@@ -191,7 +196,7 @@ namespace HttpServer.asp.Controllers
             return Ok("File is deleted");
         }
 
-        [HttpPut("update/{id}")]
+        [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> UpdateAudio(int id, [FromBody] MusicMetadataDto updatedMetadataDto)
         {

@@ -1,13 +1,17 @@
 
+using HttpServer.asp.Services;
+
 public sealed class LocalStorageProvider : IStorageProvider
 {
     private readonly IWebHostEnvironment _env;
+    private readonly SignedUrlService _urlService;
     private readonly string USER_DIRECTORY_PREFIX = "user_";
     private readonly string UPLOADS_DIR = "uploads";
 
-    public LocalStorageProvider(IWebHostEnvironment env)
+    public LocalStorageProvider(IWebHostEnvironment env, SignedUrlService urlService)
     {
         _env = env;
+        _urlService = urlService;
     }
 
     /// <summary>
@@ -170,7 +174,7 @@ public sealed class LocalStorageProvider : IStorageProvider
         }
         // return a relative path /uploads/user_1/original.mp3
         var relativePath = Path.Combine(prefixedUserDir, Path.GetFileName(filepath)).Replace("\\", "/");
-        return  relativePath; //safe to return
+        return relativePath; //safe to return
 
 
     }
@@ -204,4 +208,9 @@ public sealed class LocalStorageProvider : IStorageProvider
         return relativePath; // e.g. "user_6/filename.mp3"
     }
 
+    public string GetSignedUrlAsync(string fileName, int userId, TimeSpan timeSpan, string baseUrl)
+    {
+        var url = _urlService.GenerateSignedUrl(userId, fileName, baseUrl);
+        return url;
+    }
 }

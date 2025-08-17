@@ -1,5 +1,6 @@
 
 
+
 public interface IStorageProvider
 {
     /// <summary>
@@ -38,5 +39,5 @@ public interface IStorageProvider
     Task<bool> UpdateAsync(string fileId, string newFileId, int userId);
     string GetAbsolutePath(string relativePath);
     string GetRelativeFilePath(int userId, string fileName);
-
+    string GetSignedUrlAsync(string fileName, int userId, TimeSpan timeSpan, string baseUrl);
 }
