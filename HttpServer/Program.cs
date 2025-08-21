@@ -1,4 +1,4 @@
-
+﻿
 
 
 using Backend;
@@ -65,14 +65,47 @@ var secretKey = signedUrlConfig.GetValue<string>("SecretKey");
 
 builder.Services.AddSingleton(new SignedUrlService(secretKey));
 
+// 🔹 Database setup depending on environment
+//if (builder.Environment.IsDevelopment())
+//{
+//    // SQL Server in dev
+//    builder.Services.AddDbContext<AppDbContext>(options =>
+//        options.UseSqlServer(@"Server=.\SQLEXPRESS;Database=FileUploadDEMO;
+//                                Trusted_Connection=True;TrustServerCertificate=True;
+//                                Integrated Security=True"));
+//}
+//else
+//{
+// SQLite in production
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(@"Server=.\SQLEXPRESS;Database=FileUploadDEMO;
-                                                Trusted_Connection=True;TrustServerCertificate=True;
-                                                    Integrated Security=True"));
+    options.UseSqlite(connectionString));
+
+
+
+//}
+
+
+
+
+
 builder.Services.AddControllers();
 
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+
+    db.Database.Migrate(); // applies only if there are pending migrations
+
+}
+
+
 
 app.UseCors(builder =>
             {
