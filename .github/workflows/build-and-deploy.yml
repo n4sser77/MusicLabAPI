@@ -61,18 +61,20 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           script: |
             echo "Loading new image from tarball..."
-            # Load the image from the tarball we just transferred.
             docker load -i musiclab-api.tar
+            
             echo "Stopping and removing existing container..."
             docker stop musiclab-api || true
             docker rm musiclab-api || true
+            
             echo "Running new container..."
-            # Corrected 'docker run' command.
-            # The backslash is removed because it's in the wrong place.
-            # The entire command is now on one line, or you can use
-            # proper line continuation with backslashes at the end of each line.
+            
             docker run -d --name musiclab-api -p 8080:8080 -v /home/deploy/musiclabAPI/data:/data musiclab-api:latest
             
             echo "Removing temporary tarball..."
             rm musiclab-api.tar
+            
             echo "Deployment complete!"
+
+            echo "--- Debugging Container Status ---"
+            docker ps -a
