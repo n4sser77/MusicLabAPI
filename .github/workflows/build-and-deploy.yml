@@ -54,8 +54,11 @@ jobs:
             docker stop musiclab-api || true
             docker rm musiclab-api || true
             echo "Running new container..."
-            # Use the same 'docker run' command as before.
-            docker run -d --name musiclab-api -p 8080:8080 -v /home/deploy/musiclabAPI/data:/data \musiclab-api:latest
+            # Corrected 'docker run' command.
+            # The backslash is removed because it's in the wrong place.
+            # The entire command is now on one line, or you can use
+            # proper line continuation with backslashes at the end of each line.
+            docker run -d --name musiclab-api -p 8080:8080 -v /home/deploy/musiclabAPI/data:/data musiclab-api:latest
             
             echo "Removing temporary tarball..."
             rm musiclab-api.tar
