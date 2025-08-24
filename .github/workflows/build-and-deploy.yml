@@ -49,7 +49,8 @@ jobs:
             docker rm musiclab-api || true
             echo "Running new container..."
             # Use the same 'docker run' command as before.
-            docker run -d --name musiclab-api -p 8080:8080 -v musiclab-db:/data/app.db musiclab-api:latest
+            docker run -d --name musiclab-api -p 8080:8080 -v /home/deploy/musiclabAPI/data:/data \musiclab-api:latest
+            
             echo "Removing temporary tarball..."
             rm musiclab-api.tar
             echo "Deployment complete!"
