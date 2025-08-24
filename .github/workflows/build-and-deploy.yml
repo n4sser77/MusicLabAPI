@@ -69,7 +69,7 @@ jobs:
             
             echo "Running new container..."
             
-            docker run -d --name musiclab-api -p 8080:8080 -v /home/deploy/musiclabAPI/data:/data musiclab-api:latest
+            docker run -d --name musiclab-api -p 8080:5106 -v /home/deploy/musiclabAPI/data:/data musiclab-api:latest
             
             echo "Removing temporary tarball..."
             rm musiclab-api.tar
