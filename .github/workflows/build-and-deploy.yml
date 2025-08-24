@@ -22,6 +22,12 @@ jobs:
       - name: Save Docker Image to Tarball
         run: docker save -o musiclab-api.tar musiclab-api:latest
 
+      # Step 2.5: Fix permissions on the tarball.
+      # This step makes the file readable for all users.
+      - name: Fix Tarball Permissions
+        run: chmod 644 musiclab-api.tar
+
+
       # Step 3: Use SCP to securely transfer the tarball to the remote server.
       # This step uses the 'scp-action' from the same creator.
       - name: Transfer Image to Remote Server via SCP
