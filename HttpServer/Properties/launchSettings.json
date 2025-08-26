@@ -36,16 +36,18 @@
       "distributionName": ""
     },
     "Container (Dockerfile)": {
+      "workingDirectory": "C:\\Users\\nasse\\Desktop\\code\\NewMusicLab\\MusicLabAPI",
       "commandName": "Docker",
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
-      "environmentVariables": {
-        "ASPNETCORE_HTTPS_PORTS": "8081",
-        "ASPNETCORE_HTTP_PORTS": "8080"
-      },
+      "dockerfileBuildArguments": "",
+      "dockerfileRunArguments": "-p 8080:5106 -v \"C:\\Users\\nasse\\Desktop\\code\\NewMusicLab\\MusicLabAPI\\data:/data\" --name musiclabapi-dev",
       "publishAllPorts": true,
-      "useSSL": true
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "http://+:5106"
+      }
     }
+
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "iisSettings": {

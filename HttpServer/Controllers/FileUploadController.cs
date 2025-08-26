@@ -54,14 +54,14 @@ public class FileUploadController : ControllerBase
 
 
         // // Create a folder path to store the file -- old way
-        // var uploadsFolder = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads");
-        // if (!Directory.Exists(uploadsFolder))
+        // var UPLOADS_DIR = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads");
+        // if (!Directory.Exists(UPLOADS_DIR))
         // {
-        //     Directory.CreateDirectory(uploadsFolder);
+        //     Directory.CreateDirectory(UPLOADS_DIR);
         // }
 
         // // Generate a unique file name (or use the original file name)
-        // var filePath = Path.Combine(uploadsFolder, fileName);
+        // var filePath = Path.Combine(UPLOADS_DIR, fileName);
 
 
 

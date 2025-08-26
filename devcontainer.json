@@ -1,0 +1,23 @@
+{
+  "name": "C# (.NET)",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:2-8.0",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "dockerDashComposeVersion": "v2"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+      },
+      "extensions": [
+        "ms-dotnettools.csharp"
+      ]
+    }
+  },
+  "forwardPorts": [8080],
+  "postCreateCommand": "dotnet dev-certs https --trust",
+  "remoteUser": "vscode"
+}

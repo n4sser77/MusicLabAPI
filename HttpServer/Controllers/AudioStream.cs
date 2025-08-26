@@ -26,11 +26,13 @@ namespace HttpServer.asp.Controllers
         private readonly IWaveformGeneratorService _wave;
         private readonly IStorageProvider _storage;
         private readonly SignedUrlService _signedUrlService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
         private string uploadsFolder;
         // private IMinioClient _minio;
         // private string bucketName = "music-files";
 
-        public AudioStream(AppDbContext context, IWebHostEnvironment env, IJwtService jwtService, IWaveformGeneratorService wave, IStorageProvider storage, SignedUrlService signedUrlService)
+        public AudioStream(AppDbContext context, IWebHostEnvironment env, IJwtService jwtService, IWaveformGeneratorService wave, IStorageProvider storage, SignedUrlService signedUrlService, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _env = env;
@@ -39,6 +41,8 @@ namespace HttpServer.asp.Controllers
             uploadsFolder = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads");
             _storage = storage;
             _signedUrlService = signedUrlService;
+            _httpContextAccessor = httpContextAccessor;
+
 
         }
 
@@ -61,8 +65,9 @@ namespace HttpServer.asp.Controllers
             }
 
             // Use your storage provider to generate a pre-signed URL
-            // This method needs to be implemented in your IStorageProvider
-            var signedUrl = _storage.GetSignedUrlAsync(fileName, file.UserId, TimeSpan.FromMinutes(60), "http://localhost:5106/api/audios"); // URL is valid for 10 minutes
+            var request = _httpContextAccessor.HttpContext.Request;
+
+            var signedUrl = _storage.GetSignedUrlAsync(fileName, file.UserId, TimeSpan.FromMinutes(60), $"{request.Scheme}://{request.Host}/api/audios"); // URL is valid for 10 minutes
 
             if (string.IsNullOrEmpty(signedUrl))
             {
@@ -211,7 +216,7 @@ namespace HttpServer.asp.Controllers
                 if (string.IsNullOrEmpty(fileToUpdate.FilePath))
                 {
                     var fileref = _context.Files.FirstOrDefault(r => r.Id == fileToUpdate.FileReferenceId);
-                    // System.IO.File.Move(Path.Combine(uploadsFolder, fileref.FilePath), Path.Combine(uploadsFolder, updatedMetadataDto.FilePath));
+                    // System.IO.File.Move(Path.Combine(UPLOADS_DIR, fileref.FilePath), Path.Combine(UPLOADS_DIR, updatedMetadataDto.FilePath));
                     var oldFilename = Path.GetFileName(fileref?.FilePath);
                     var newFilename = Path.GetFileName(updatedMetadataDto.FilePath);
                     if (string.IsNullOrEmpty(oldFilename))
@@ -227,7 +232,7 @@ namespace HttpServer.asp.Controllers
                 else
                 {
 
-                    // System.IO.File.Move(Path.Combine(uploadsFolder, fileToUpdate.FilePath), Path.Combine(uploadsFolder, updatedMetadataDto.FilePath));
+                    // System.IO.File.Move(Path.Combine(UPLOADS_DIR, fileToUpdate.FilePath), Path.Combine(UPLOADS_DIR, updatedMetadataDto.FilePath));
                     var oldFilename = Path.GetFileName(fileToUpdate.FilePath);
                     var newFilename = Path.GetFileName(updatedMetadataDto.FilePath);
 

@@ -20,6 +20,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 // Optionally, add services to the container here
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddScoped<IUserManager, UserManager>();
 builder.Services.AddScoped<IStorageProvider, LocalStorageProvider>();
 // For example, if you plan to use controllers:
@@ -44,7 +46,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddCors();
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      builder =>
+                      {
+                          builder.WithOrigins("http://localhost:5173", "http://localhost:8080")
+                                 .AllowAnyHeader()
+                                 .AllowAnyMethod();
+                      });
+});
 
 
 
@@ -58,7 +71,7 @@ builder.Services.AddCors();
 
 
 builder.Services.AddSingleton<IJwtService, JwtService>();
-builder.Services.AddTransient<IWaveformGeneratorService, WaveformGeneratorService>();
+builder.Services.AddTransient<IWaveformGeneratorService, WaveformServiceSkia>();
 // Read the secret key from configuration
 var signedUrlConfig = builder.Configuration.GetSection("SignedUrl");
 var secretKey = signedUrlConfig.GetValue<string>("SecretKey");
@@ -107,12 +120,7 @@ using (var scope = app.Services.CreateScope())
 
 
 
-app.UseCors(builder =>
-            {
-                builder.AllowAnyOrigin()  // Allow access from any IP
-                       .AllowAnyMethod()
-                       .AllowAnyHeader();
-            });
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();
