@@ -4,15 +4,25 @@ using HttpServer.asp.Services;
 public sealed class LocalStorageProvider : IStorageProvider
 {
     private readonly IWebHostEnvironment _env;
+    private readonly IConfiguration _config;
     private readonly SignedUrlService _urlService;
-    private readonly string USER_DIRECTORY_PREFIX = "user_";
-    private readonly string UPLOADS_DIR = "uploads";
 
-    public LocalStorageProvider(IWebHostEnvironment env, SignedUrlService urlService)
+    private readonly string USER_DIRECTORY_PREFIX;
+    private readonly string UPLOADS_DIR;
+
+    public LocalStorageProvider(IWebHostEnvironment env, SignedUrlService urlService, IConfiguration config)
     {
         _env = env;
         _urlService = urlService;
+        _config = config;
+
+        // Read values from appsettings.json
+        USER_DIRECTORY_PREFIX = Path.GetRelativePath(_env.ContentRootPath, config["Storage:UploadsDirPrefix"] ?? "user_");
+        UPLOADS_DIR = Path.GetRelativePath(_env.ContentRootPath, _config["Storage:UploadsDir"] ?? "../data/uploads");
+
+
     }
+
 
     /// <summary>
     /// Gets user directory in blob service.
@@ -22,16 +32,16 @@ public sealed class LocalStorageProvider : IStorageProvider
     /// A tupple containing three string values: 
     /// 
     /// string prefixedUserDir, 
-    /// string uploadsFolder of the service,
+    /// string UPLOADS_DIR of the service,
     /// string userDir finalized directory of where the user files is
     /// </returns>
-    private (string prefixedUserDir, string uploadsFolder, string userDir) GetUserDir(int userId)
+    private (string prefixedUserDir, string userDir) GetUserDir(int userId)
     {
         string prefixedUserDir = USER_DIRECTORY_PREFIX + userId;
-        string uploadsFolder = Path.Combine(_env.ContentRootPath, UPLOADS_DIR);
-        string userDir = Path.Combine(uploadsFolder, prefixedUserDir);
 
-        return (prefixedUserDir, uploadsFolder, userDir);
+        string userDir = Path.Combine(UPLOADS_DIR, prefixedUserDir);
+
+        return (prefixedUserDir, userDir);
     }
 
     public Task<bool> DeleteAsync(string fileId, int userId)
@@ -42,7 +52,7 @@ public sealed class LocalStorageProvider : IStorageProvider
         // sanatizes the fileid by getting only the filename
         string safeFilename = Path.GetFileName(fileId);
 
-        (string prefixedUserDir, string uploadsFolder, string userDir) = GetUserDir(userId);
+        (string prefixedUserDir, string userDir) = GetUserDir(userId);
 
         if (!Directory.Exists(userDir))
         {
@@ -69,13 +79,11 @@ public sealed class LocalStorageProvider : IStorageProvider
         }
 
 
-
-
     }
 
     public Task<Stream?> DownloadAsync(string fileId, int userId)
     {
-        (string prefixedUserDir, string uploadsFolder, string userDir) = GetUserDir(userId);
+        (string prefixedUserDir, string userDir) = GetUserDir(userId);
         // sanatizes the fileid by getting only the filename
         string safeFilename = Path.GetFileName(fileId);
 
@@ -98,7 +106,7 @@ public sealed class LocalStorageProvider : IStorageProvider
 
     public Task<bool> ExistsAsync(string fileId, int userId)
     {
-        (string prefixedUserDir, string uploadsFolder, string userDir) = GetUserDir(userId);
+        (string prefixedUserDir, string userDir) = GetUserDir(userId);
         // sanatizes the fileid by getting only the filename
         string filename = Path.GetFileName(fileId);
 
@@ -111,12 +119,13 @@ public sealed class LocalStorageProvider : IStorageProvider
         string safeFilePath = Path.Combine(userDir, filename);
 
         // Check if the file exists
-        return Task.FromResult(File.Exists(safeFilePath));
+        var exists = File.Exists(safeFilePath);
+        return Task.FromResult(exists);
     }
 
     public Task<bool> UpdateAsync(string fileId, string newFileId, int userId)
     {
-        (string prefixedUserDir, string uploadsFolder, string userDir) = GetUserDir(userId);
+        (string prefixedUserDir, string userDir) = GetUserDir(userId);
         var filepath = Path.Combine(userDir, fileId);
         var newFilepath = Path.Combine(userDir, newFileId);
 
@@ -137,11 +146,11 @@ public sealed class LocalStorageProvider : IStorageProvider
 
     public async Task<string> UploadAsync(Stream fileStream, string originalFileName, string contentType, int userId)
     {
-        (string prefixedUserDir, string uploadsFolder, string userDir) = GetUserDir(userId);
+        (string prefixedUserDir, string userDir) = GetUserDir(userId);
 
-        if (!Directory.Exists(uploadsFolder))
+        if (!Directory.Exists(UPLOADS_DIR))
         {
-            Directory.CreateDirectory(uploadsFolder);
+            Directory.CreateDirectory(UPLOADS_DIR);
         }
 
         // use user directory if exists else create 

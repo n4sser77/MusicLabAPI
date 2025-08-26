@@ -8,12 +8,22 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    
-    <!-- Folder containing Dockerfile -->
-    <DockerfileFile>..\Dockerfile</DockerfileFile>
-    <!-- Name of Dockerfile -->
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <!-- <DockerfileFile>C:\Users\nasse\Desktop\code\NewMusicLab\MusicLabAPI\Dockerfile</DockerfileFile> -->
+
+    <!-- Context folder sent to Docker (solution root) -->
+    <!-- <DockerContext>C:\Users\nasse\Desktop\code\NewMusicLab\MusicLabAPI</DockerContext> -->
+
+    <!-- Target OS -->
+    <!-- <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS> -->
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="HttpServer\**\*.*" CopyToOutputDirectory="Never" />
+    <Content Include="Shared\**\*.*" CopyToOutputDirectory="Never" />
+  </ItemGroup>
+
+
+
 
   <ItemGroup>
     <Compile Remove="uploads\**" />
@@ -39,6 +49,7 @@
     <PackageReference Include="Minio" Version="6.0.5" />
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="NAudio.WaveFormRenderer" Version="2.0.0" />
+    <PackageReference Include="SkiaSharp" Version="3.119.0" />
   </ItemGroup>
 
   <ItemGroup>

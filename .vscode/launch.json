@@ -1,0 +1,45 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // This is the standard configuration for local debugging on your machine.
+            "name": ".NET Core Launch (web)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/HttpServer/bin/Debug/net9.0/MusiclabApi.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/HttpServer",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            // This configuration is used to attach the debugger to a running .NET process.
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach"
+        },
+        {
+            // This is the configuration for launching and debugging your app inside a Docker container.
+            "name": "Containers: .NET Launch",
+            "type": "docker",
+            "request": "launch",
+            // The preLaunchTask tells VS Code which task to run before launching the debugger.
+            // This task is typically defined in your tasks.json and handles building the image.
+            "preLaunchTask": "docker-run: debug",
+            "netCore": {
+                // This tells the Docker extension which project to build and debug.
+                "appProject": "${workspaceFolder}/HttpServer/MusiclabApi.csproj"
+            }
+        }
+    ]
+}
