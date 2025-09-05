@@ -29,6 +29,14 @@ RUN dotnet publish "MusiclabApi/MusiclabApi.csproj" \
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
+
+# Install FFmpeg
+RUN apt-get update && \
+    apt-get install -y ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+
+
+
 # Copy the published application from the 'build' stage.
 # The --from=build flag points to the 'build' stage and its publish directory.
 COPY --from=build /app/publish .

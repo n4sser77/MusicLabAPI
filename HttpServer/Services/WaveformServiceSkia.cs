@@ -1,6 +1,7 @@
 ﻿using HttpServer.asp.Services.Interfaces;
 using NAudio.Wave;
 using SkiaSharp;
+using System.Diagnostics;
 using System.IO;
 
 namespace HttpServer.asp.Services;
@@ -22,7 +23,20 @@ public class WaveformServiceSkia : IWaveformGeneratorService
         if (!File.Exists(fullPath))
             throw new FileNotFoundException("Audio file not found", fullPath);
 
-        using var reader = new AudioFileReader(fullPath);
+        var ffmpeg = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "ffmpeg",
+                Arguments = "-i input.m4a -f wav -",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            }
+        };
+
+        ffmpeg.Start();
+        var reader = new WaveFileReader(ffmpeg.StandardOutput.BaseStream);
 
         int width = 710;
         int topHeight = 32;
@@ -30,11 +44,17 @@ public class WaveformServiceSkia : IWaveformGeneratorService
         int height = topHeight + bottomHeight;
 
         // Read all samples
+        var sampleProvider = reader.ToSampleProvider();
+
         List<float> samples = new();
-        int read;
         float[] buffer = new float[reader.WaveFormat.SampleRate * reader.WaveFormat.Channels];
-        while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
+        int read;
+
+        while ((read = sampleProvider.Read(buffer, 0, buffer.Length)) > 0)
+        {
             samples.AddRange(buffer.Take(read));
+        }
+
 
         // If the audio file is empty or too short, return an empty waveform
         if (samples.Count == 0)
