@@ -35,7 +35,7 @@ public class WaveformServiceSkia : IWaveformGeneratorService
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
-                CreateNoWindow = true
+
             }
         };
 
