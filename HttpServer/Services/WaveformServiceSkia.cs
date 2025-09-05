@@ -28,7 +28,9 @@ public class WaveformServiceSkia : IWaveformGeneratorService
             StartInfo = new ProcessStartInfo
             {
                 FileName = "ffmpeg",
+
                 Arguments = $"-i {fullPath} -f wav -",
+
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
