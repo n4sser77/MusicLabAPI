@@ -22,7 +22,7 @@ public class WaveformServiceSkia : IWaveformGeneratorService
         string fullPath = Path.Combine(UPLOADS_DIR, filepath);
         if (!File.Exists(fullPath))
             throw new FileNotFoundException("Audio file not found", fullPath);
-        
+
         var ffmpeg = new Process
         {
             StartInfo = new ProcessStartInfo
@@ -33,13 +33,17 @@ public class WaveformServiceSkia : IWaveformGeneratorService
 
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
-                CreateNoWindow = true,
-                
+                CreateNoWindow = true
             }
         };
 
         ffmpeg.Start();
-        var reader = new WaveFileReader(ffmpeg.StandardOutput.BaseStream);
+
+        using var audioMs = new MemoryStream();
+        ffmpeg.StandardOutput.BaseStream.CopyTo(audioMs);
+        audioMs.Position = 0;
+
+        using var reader = new WaveFileReader(audioMs);
 
         int width = 710;
         int topHeight = 32;
