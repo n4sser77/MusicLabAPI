@@ -35,7 +35,8 @@ public class WaveformServiceSkia : IWaveformGeneratorService
                 Arguments = $"-y -i \"{fullPath}\" -acodec pcm_s16le -ar 44100 -ac 2 \"{tempWavPath}\"",
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                
             }
         };
 
