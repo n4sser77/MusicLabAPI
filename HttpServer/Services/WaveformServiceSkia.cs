@@ -23,6 +23,7 @@ public class WaveformServiceSkia : IWaveformGeneratorService
         if (!File.Exists(fullPath))
             throw new FileNotFoundException("Audio file not found", fullPath);
 
+
         var ffmpeg = new Process
         {
             StartInfo = new ProcessStartInfo
@@ -33,6 +34,7 @@ public class WaveformServiceSkia : IWaveformGeneratorService
 
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
+                CreateNoWindow = true
                 CreateNoWindow = true
             }
         };
