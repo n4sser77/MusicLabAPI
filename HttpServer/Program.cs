@@ -62,14 +62,6 @@ builder.Services.AddCors(options =>
 
 
 
-// builder.Services.AddMinio( configureClient =>
-//     configureClient.WithEndpoint(endpoint)
-//                     .WithCredentials(accessKey, secretKey).
-//                     Build()
-// );
-
-
-
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddTransient<IWaveformGeneratorService, WaveformServiceSkia>();
 // Read the secret key from configuration
@@ -119,7 +111,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 
-
+app.UseRouting();
 app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication();
