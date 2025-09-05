@@ -10,6 +10,7 @@ COPY ["Shared/Shared.csproj", "Shared/"]
 
 # Restore NuGet packages
 RUN dotnet restore "MusiclabApi/MusiclabApi.csproj"
+ENV LD_LIBRARY_PATH=/app/runtimes/linux-x64/native
 
 # Copy the rest of the code
 COPY . .
