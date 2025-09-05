@@ -22,14 +22,18 @@ public class WaveformServiceSkia : IWaveformGeneratorService
         string fullPath = Path.Combine(UPLOADS_DIR, filepath);
         if (!File.Exists(fullPath))
             throw new FileNotFoundException("Audio file not found", fullPath);
-        
+
+
+        // Generate a unique temp file path
+        string tempWavPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.wav");
+
         var ffmpeg = new Process
         {
             StartInfo = new ProcessStartInfo
             {
                 FileName = "ffmpeg",
-                Arguments = $"-i {fullPath} -f wav -",
-                RedirectStandardOutput = true,
+                Arguments = $"-y -i \"{fullPath}\" -acodec pcm_s16le -ar 44100 -ac 2 \"{tempWavPath}\"",
+                RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 
@@ -37,7 +41,14 @@ public class WaveformServiceSkia : IWaveformGeneratorService
         };
 
         ffmpeg.Start();
-        var reader = new WaveFileReader(ffmpeg.StandardOutput.BaseStream);
+        string errorOutput = await ffmpeg.StandardError.ReadToEndAsync();
+        await ffmpeg.WaitForExitAsync();
+
+        if (!File.Exists(tempWavPath) || new FileInfo(tempWavPath).Length == 0)
+            throw new Exception($"FFmpeg failed to produce output. Error: {errorOutput}");
+
+        // Proceed with waveform generation
+        using var reader = new AudioFileReader(tempWavPath);
 
         int width = 710;
         int topHeight = 32;
@@ -128,6 +139,7 @@ public class WaveformServiceSkia : IWaveformGeneratorService
         using var data = img.Encode(SKEncodedImageFormat.Png, 100);
         using var ms = new MemoryStream();
         data.SaveTo(ms);
+        File.Delete(tempWavPath);
 
         return Convert.ToBase64String(ms.ToArray());
     }

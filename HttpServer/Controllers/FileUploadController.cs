@@ -65,7 +65,7 @@ public class FileUploadController : ControllerBase
 
 
 
-        var safeFileName = Path.GetFileName(file.FileName);
+        var safeFileName = Path.GetFileName(file.FileName.Replace(" ", "_"));
 
         if (file.ContentType != "audio")
         {
