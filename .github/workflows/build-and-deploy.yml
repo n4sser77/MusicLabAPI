@@ -10,37 +10,36 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    env:
+      IMAGE_TAG: ${{ github.sha }}
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 1: Build the Docker image.
+      # Step 1: Build the Docker image with a unique tag
       - name: Build Docker Image
-        run: docker build -t musiclab-api:latest -f Dockerfile .
+        run: docker build -t musiclab-api:${{ env.IMAGE_TAG }} -f Dockerfile .
 
-      # Step 2: Save the Docker image to a tar archive.
+      # Step 2: Save the Docker image to a tar archive
       - name: Save Docker Image to Tarball
-        run: docker save -o musiclab-api.tar musiclab-api:latest
+        run: docker save -o musiclab-api.tar musiclab-api:${{ env.IMAGE_TAG }}
 
-      # Step 2.5: Fix permissions on the tarball.
-      # This step makes the file readable for all users.
+      # Step 2.5: Fix permissions on the tarball
       - name: Fix Tarball Permissions
         run: chmod 644 musiclab-api.tar
 
-      # Step 3: Use SCP to securely transfer the tarball to the remote server.
-      # This step uses the 'scp-action' from the same creator.
+      # Step 3: Transfer Image to Remote Server via SCP
       - name: Transfer Image to Remote Server via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
-          source: "musiclab-api.tar" # The file to send
-          target:
-            "/home/${{ secrets.SERVER_USERNAME }}" # The destination path on the server
+          source: "musiclab-api.tar"
+          target: "/home/${{ secrets.SERVER_USERNAME }}"
 
-
-            # Debug Step: Verify the file is on the server
+      # Step 3.5: Verify File Transfer
       - name: Verify File Transfer
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -50,10 +49,8 @@ jobs:
           script: |
             echo "Listing files in home directory:"
             ls -al /home/${{ secrets.SERVER_USERNAME }}
-            echo "Listing temporary files in /tmp:"
-            ls -al /tmp
 
-      # Step 4: SSH into the remote server and deploy the image.
+      # Step 4: Deploy to Remote Server via SSH
       - name: Deploy to Remote Server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -62,20 +59,20 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           script: |
             echo "Loading new image from tarball..."
-            docker load -i musiclab-api.tar
+            docker load -i /home/${{ secrets.SERVER_USERNAME }}/musiclab-api.tar
 
             echo "Stopping and removing existing container..."
             docker stop musiclab-api || true
             docker rm musiclab-api || true
 
-            echo "Running new container..."
+            echo "Running new container with updated image..."
+            docker run -d --name musiclab-api \
+              -p 8080:5106 \
+              -v /home/deploy/musiclabAPI/data:/data \
+              musiclab-api:${{ github.sha }}
 
-            docker run -d --name musiclab-api -p 8080:5106 -v /home/deploy/musiclabAPI/data:/data musiclab-api:latest
+            echo "Cleaning up tarball..."
+            rm /home/${{ secrets.SERVER_USERNAME }}/musiclab-api.tar
 
-            echo "Removing temporary tarball..."
-            rm musiclab-api.tar
-
-            echo "Deployment complete!"
-
-            echo "--- Debugging Container Status ---"
+            echo "--- Deployment Complete ---"
             docker ps -a
