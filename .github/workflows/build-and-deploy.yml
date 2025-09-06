@@ -67,7 +67,7 @@ jobs:
 
             echo "Running new container with updated image..."
             docker run -d --name musiclab-api \
-              -p 8080:5106 \
+              -p 127.0.0.1:5106:5106\
               -v /home/deploy/musiclabAPI/data:/data \
               musiclab-api:${{ github.sha }}
 
