@@ -53,7 +53,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       builder =>
                       {
-                          builder.WithOrigins("http://localhost:5173", "http://localhost:8080")
+                          builder.WithOrigins("http://localhost:5173", "http://localhost:8080", "https://sonic-locker.netlify.app")
                                  .AllowAnyHeader()
                                  .AllowAnyMethod();
                       });
