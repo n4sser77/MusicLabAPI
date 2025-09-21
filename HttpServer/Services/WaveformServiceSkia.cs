@@ -36,7 +36,7 @@ public class WaveformServiceSkia : IWaveformGeneratorService
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                
+
             }
         };
 
@@ -47,26 +47,26 @@ public class WaveformServiceSkia : IWaveformGeneratorService
         if (!File.Exists(tempWavPath) || new FileInfo(tempWavPath).Length == 0)
             throw new Exception($"FFmpeg failed to produce output. Error: {errorOutput}");
 
+        List<float> samples = new();
         // Proceed with waveform generation
-        using var reader = new AudioFileReader(tempWavPath);
+        using (var reader = new AudioFileReader(tempWavPath))
+        {
+            // Read all samples
+            var sampleProvider = reader.ToSampleProvider();
+
+            float[] buffer = new float[reader.WaveFormat.SampleRate * reader.WaveFormat.Channels];
+            int read;
+
+            while ((read = sampleProvider.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                samples.AddRange(buffer.Take(read));
+            }
+        }
 
         int width = 710;
         int topHeight = 32;
         int bottomHeight = 32;
         int height = topHeight + bottomHeight;
-
-        // Read all samples
-        var sampleProvider = reader.ToSampleProvider();
-
-        List<float> samples = new();
-        float[] buffer = new float[reader.WaveFormat.SampleRate * reader.WaveFormat.Channels];
-        int read;
-
-        while ((read = sampleProvider.Read(buffer, 0, buffer.Length)) > 0)
-        {
-            samples.AddRange(buffer.Take(read));
-        }
-
 
         // If the audio file is empty or too short, return an empty waveform
         if (samples.Count == 0)

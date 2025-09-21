@@ -67,9 +67,9 @@ public class FileUploadController : ControllerBase
 
         var safeFileName = Path.GetFileName(file.FileName.Replace(" ", "_"));
 
-        if (file.ContentType != "audio")
+        if (!file.ContentType.Contains("audio", StringComparison.InvariantCultureIgnoreCase))
         {
-
+            return BadRequest(new FileuploadResponseDto { message = "File must be of type audio .",  });
         }
 
         // Get stream from form
