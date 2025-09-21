@@ -78,11 +78,12 @@ namespace HttpServer.asp.Controllers
         }
 
 
-        [HttpGet("{userId}/{fileName}/")]
+        [HttpGet("{userId}/{fileName}")]
+        [Authorize]
         public async Task<IActionResult> StreamAudio(int userId, string fileName, [FromQuery] long expires, [FromQuery] string sig)
         {
-            if (!_signedUrlService.ValidateSignature(userId, fileName, expires, sig))
-                return Unauthorized();
+            // if (!_signedUrlService.ValidateSignature(userId, fileName, expires, sig))
+            //     return Unauthorized();
 
             if (fileName == null) return NotFound("File not found");
             string filePath;
@@ -200,6 +201,8 @@ namespace HttpServer.asp.Controllers
             return Ok("File is deleted");
         }
 
+
+
         [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> UpdateAudio(int id, [FromBody] MusicMetadataDto updatedMetadataDto)
@@ -209,52 +212,60 @@ namespace HttpServer.asp.Controllers
                 var userId = User.FindFirst("nameidentifier")?.Value;
                 int.TryParse(userId, out int userIdInt);
 
-
                 var fileToUpdate = await _context.MusicData.FirstOrDefaultAsync(m => m.Id == id);
                 if (fileToUpdate == null) return NotFound("File not found");
 
-                if (string.IsNullOrEmpty(fileToUpdate.FilePath))
+                // Determine the Current File Path
+                string currentFilePath = fileToUpdate.FilePath;
+                if (string.IsNullOrEmpty(currentFilePath))
                 {
-                    var fileref = _context.Files.FirstOrDefault(r => r.Id == fileToUpdate.FileReferenceId);
-                    // System.IO.File.Move(Path.Combine(UPLOADS_DIR, fileref.FilePath), Path.Combine(UPLOADS_DIR, updatedMetadataDto.FilePath));
-                    var oldFilename = Path.GetFileName(fileref?.FilePath);
-                    var newFilename = Path.GetFileName(updatedMetadataDto.FilePath);
-                    if (string.IsNullOrEmpty(oldFilename))
-                    {
-                        return BadRequest("File not present");
-                    }
-
-
-                    bool isOK = await _storage.UpdateAsync(oldFilename, newFilename, fileToUpdate.UserId);
-                    if (!isOK) return BadRequest(new { message = "Failed to save file" });
-
-                }
-                else
-                {
-
-                    // System.IO.File.Move(Path.Combine(UPLOADS_DIR, fileToUpdate.FilePath), Path.Combine(UPLOADS_DIR, updatedMetadataDto.FilePath));
-                    var oldFilename = Path.GetFileName(fileToUpdate.FilePath);
-                    var newFilename = Path.GetFileName(updatedMetadataDto.FilePath);
-
-                    bool isOK = await _storage.UpdateAsync(oldFilename, newFilename, fileToUpdate.UserId);
-                    if (!isOK) return BadRequest(new { message = "Failed to save file" });
+                    var fileref = await _context.Files.FirstOrDefaultAsync(r => r.Id == fileToUpdate.FileReferenceId);
+                    currentFilePath = fileref?.FilePath;
                 }
 
-                fileToUpdate.Title = updatedMetadataDto.Title;
+                if (string.IsNullOrEmpty(currentFilePath))
+                {
+                    return BadRequest("File path not found in database.");
+                }
+
+                var oldFilenameWithExtension = Path.GetFileName(currentFilePath);
+                var oldFilenameWithoutExtension = Path.GetFileNameWithoutExtension(oldFilenameWithExtension);
+                var fileExtension = Path.GetExtension(oldFilenameWithExtension);
+
+                string newFilePath = currentFilePath;
+
+                // --- FIX: Clean the incoming title before use ---
+                // 1. Ensure the new title does not contain an extension if the old one mistakenly did.
+                string cleanedNewTitle = Path.GetFileNameWithoutExtension(updatedMetadataDto.Title);
+                // The title in the DB should be the simple name without extension.
+                fileToUpdate.Title = cleanedNewTitle;
+
+                // Rename file if the title has changed
+                if (oldFilenameWithoutExtension != cleanedNewTitle)
+                {
+                    // The new title is now clean, append the single, correct extension.
+                    var newFilenameWithExtension = cleanedNewTitle + fileExtension;
+
+                    var directoryPath = Path.GetDirectoryName(currentFilePath);
+                    newFilePath = Path.Combine(directoryPath ?? string.Empty, newFilenameWithExtension);
+
+                    bool isOK = await _storage.UpdateAsync(oldFilenameWithExtension, newFilenameWithExtension, fileToUpdate.UserId);
+                    if (!isOK) return BadRequest(new { message = "Failed to rename file in storage." });
+                }
+
+                // Update Metadata in Database
+                // fileToUpdate.Title has already been set to cleanedNewTitle above.
                 fileToUpdate.Bpm = updatedMetadataDto.Bpm;
                 fileToUpdate.Genre = updatedMetadataDto.Genre;
-                fileToUpdate.FilePath = updatedMetadataDto.FilePath;
+                fileToUpdate.FilePath = newFilePath;
 
                 await _context.SaveChangesAsync();
-
             }
             catch (Exception)
             {
-
-                return BadRequest();
+                return StatusCode(500, "An error occurred while processing the request.");
             }
             return Ok();
         }
-
     }
 }
