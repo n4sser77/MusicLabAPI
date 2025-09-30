@@ -1,0 +1,1 @@
+[![Build, SCP, and Deploy Docker Image](https://github.com/n4sser77/MusicLabAPI/actions/workflows/build-and-deploy.yml/badge.svg?branch=main&event=deployment)](https://github.com/n4sser77/MusicLabAPI/actions/workflows/build-and-deploy.yml)
