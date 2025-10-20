@@ -3,14 +3,11 @@ using Backend.asp.Services.Interfaces;
 using HttpServer.asp.Services;
 using HttpServer.asp.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Minio;
-using Minio.DataModel;
-using Minio.DataModel.Args;
+using MusiclabApi;
+using MusiclabApi.Services;
 using Shared.Dtos;
-using System.Runtime.CompilerServices;
 using System.Security.Claims;
 
 
@@ -20,7 +17,7 @@ namespace HttpServer.asp.Controllers
     [Route("api/audios")]
     public class AudioStream : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly PostgresAppDb _context;
         private readonly IJwtService _jwtService;
         private readonly IWebHostEnvironment _env;
         private readonly IWaveformGeneratorService _wave;
@@ -32,7 +29,7 @@ namespace HttpServer.asp.Controllers
         // private IMinioClient _minio;
         // private string bucketName = "music-files";
 
-        public AudioStream(AppDbContext context, IWebHostEnvironment env, IJwtService jwtService, IWaveformGeneratorService wave, IStorageProvider storage, SignedUrlService signedUrlService, IHttpContextAccessor httpContextAccessor)
+        public AudioStream(PostgresAppDb context, IWebHostEnvironment env, IJwtService jwtService, IWaveformGeneratorService wave, IStorageProvider storage, SignedUrlService signedUrlService, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _env = env;
@@ -65,9 +62,9 @@ namespace HttpServer.asp.Controllers
             }
 
             // Use your storage provider to generate a pre-signed URL
-            var request = _httpContextAccessor.HttpContext.Request;
+            var request = _httpContextAccessor.HttpContext?.Request;
 
-            var signedUrl = _storage.GetSignedUrlAsync(fileName, file.UserId, TimeSpan.FromMinutes(60), $"{request.Scheme}://{request.Host}/api/audios"); // URL is valid for 10 minutes
+            var signedUrl = await _storage.GetSignedUrlAsync(fileName, file.UserId, TimeSpan.FromMinutes(60), $"{request.Scheme}://{request.Host}/api/audios"); // URL is valid for 10 minutes
 
             if (string.IsNullOrEmpty(signedUrl))
             {
@@ -98,22 +95,25 @@ namespace HttpServer.asp.Controllers
             if (file is null) file = await _context.MusicData.FirstOrDefaultAsync(m => m.Title == Path.GetFileNameWithoutExtension(filePath));
             if (file is null) file = await _context.MusicData.FirstOrDefaultAsync(m => m.FilePath.Contains(filePath));
 
+            if (file is null)
+            {
+                return NotFound("File metadata not found");
+            }
 
-
-
+            Stream? fileStream = await _storage.DownloadAsync(fileName, file.UserId);
+            if (fileStream is null)
+            {
+                return NotFound("File not found");
+            }
             if (string.IsNullOrEmpty(file.WaveFormImageBase64))
             {
+                byte[] bytes = await SupabaseBlob.ReadStreamToEndAsync(fileStream);
+
                 var waveform = _wave.GenerateWaveformImage(filePath);
                 file.WaveFormImageBase64 = await waveform;
                 await _context.SaveChangesAsync();
             }
 
-            FileStream? fileStream = (FileStream?)await _storage.DownloadAsync(fileName, file.UserId);
-
-            if (fileStream is null)
-            {
-                return NotFound("File not found");
-            }
 
             return File(fileStream, "audio/mpeg", enableRangeProcessing: true);
         }
@@ -160,7 +160,9 @@ namespace HttpServer.asp.Controllers
 
                 if (string.IsNullOrEmpty(fileDto.WaveFormImageBase64))
                 {
-                    var waveform = _wave.GenerateWaveformImage(fileDto.FilePath);
+                    var ms = await _storage.DownloadAsync(file.FilePath, file.UserId);
+                    var bytes = await SupabaseBlob.ReadStreamToEndAsync(ms);
+                    var waveform = _wave.GenerateWaveformImage(bytes);
                     fileDto.WaveFormImageBase64 = await waveform;
                 }
                 filesMetadataDto.Add(fileDto);

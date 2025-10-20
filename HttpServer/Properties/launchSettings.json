@@ -41,7 +41,7 @@
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
       "dockerfileBuildArguments": "",
-      "dockerfileRunArguments": "-p 8080:5106 -v \"C:\\Users\\nasse\\Desktop\\code\\NewMusicLab\\MusicLabAPI\\data:/data\" --name musiclabapi-dev",
+      "dockerfileRunArguments": "-p 5106:5106 -v \"C:\\Users\\nasse\\Desktop\\code\\NewMusicLab\\MusicLabAPI\\data:/data\" --name musiclabapi-dev",
       "publishAllPorts": true,
       "environmentVariables": {
         "ASPNETCORE_URLS": "http://+:5106"

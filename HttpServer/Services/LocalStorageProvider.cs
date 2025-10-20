@@ -217,9 +217,9 @@ public sealed class LocalStorageProvider : IStorageProvider
         return relativePath; // e.g. "user_6/filename.mp3"
     }
 
-    public string GetSignedUrlAsync(string fileName, int userId, TimeSpan timeSpan, string baseUrl)
+    public async Task<string> GetSignedUrlAsync(string fileName, int userId, TimeSpan timeSpan, string baseUrl)
     {
         var url = _urlService.GenerateSignedUrl(userId, fileName, baseUrl);
-        return url;
+        return await Task.FromResult(url);
     }
 }

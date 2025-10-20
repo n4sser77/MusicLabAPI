@@ -1,18 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-using System.IO;
-using System.Threading.Tasks;
-using Backend.Models;
-using HttpServer.asp.Dtos;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using Shared.Dtos;
+﻿using Backend.Models;
 using HttpServer.asp.Services.Interfaces;
-using Minio;
-using Minio.DataModel.Args;
-using Minio.DataModel;
-using Minio.DataModel.Encryption;
-using NAudio.MediaFoundation;
+using Microsoft.AspNetCore.Mvc;
+using MusiclabApi;
+using MusiclabApi.Services;
+using Shared.Dtos;
+
 
 namespace Backend.Controllers;
 
@@ -20,13 +12,13 @@ namespace Backend.Controllers;
 [Route("api/files")]
 public class FileUploadController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly PostgresAppDb _context;
     private readonly IWebHostEnvironment _env;
     private readonly IWaveformGeneratorService _waveform;
     private readonly IStorageProvider _storage;
     // private readonly IMinioClient _minio;
 
-    public FileUploadController(AppDbContext context, IWebHostEnvironment env, IWaveformGeneratorService waveGen, IStorageProvider storage)
+    public FileUploadController(PostgresAppDb context, IWebHostEnvironment env, IWaveformGeneratorService waveGen, IStorageProvider storage)
     {
         _context = context;
         _env = env;
@@ -78,9 +70,13 @@ public class FileUploadController : ControllerBase
         var filePath = await _storage.UploadAsync(filestram, safeFileName, file.ContentType, metadata.UserId);
 
         System.Console.WriteLine("Filepath: " + filePath);
-        System.Console.WriteLine("Filepath: " + _storage.GetAbsolutePath(filePath));
+        //System.Console.WriteLine("Filepath: " + _storage.GetAbsolutePath(filePath));
 
-        var generateWaveformtask = _waveform.GenerateWaveformImage(_storage.GetAbsolutePath(filePath));
+        //var generateWaveformtask = _waveform.GenerateWaveformImage(_storage.GetAbsolutePath(filePath));
+        var ms = await _storage.DownloadAsync(filePath, metadata.UserId);
+        var bytes = await SupabaseBlob.ReadStreamToEndAsync(ms);
+        var waveformTask = _waveform.GenerateWaveformImage(bytes);
+
 
         // Create a FileReference instance for the database
         var fileReference = new FileReference
@@ -96,7 +92,7 @@ public class FileUploadController : ControllerBase
             Genre = metadata.Genre,
             UserId = metadata.UserId,
             FilePath = filePath,
-            WaveFormImageBase64 = await generateWaveformtask,
+            WaveFormImageBase64 = await waveformTask,
 
         };
 

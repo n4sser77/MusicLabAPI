@@ -2,10 +2,8 @@
 using Backend.asp.Services.Interfaces;
 using Backend.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Backend.Controllers;
 

@@ -1,6 +1,7 @@
 ﻿using Backend.asp.Services.Interfaces;
 using Backend.Models;
 using Microsoft.EntityFrameworkCore;
+using MusiclabApi;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -13,8 +14,8 @@ namespace Backend;
 public class UserManager : IUserManager
 {
 
-    private readonly AppDbContext db;
-    public UserManager(AppDbContext dbContext)
+    private readonly PostgresAppDb db;
+    public UserManager(PostgresAppDb dbContext)
     {
         db = dbContext;
     }

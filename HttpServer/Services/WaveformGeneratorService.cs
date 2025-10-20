@@ -49,5 +49,9 @@ public class WaveformGeneratorService : IWaveformGeneratorService
         return imageBase64;
 
     }
+    public Task<string> GenerateWaveformImage(byte[] bytes)
+    {
+                throw new NotImplementedException();
+    }
 }
 
